@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import logger from './logger';
 
 dotenv.config();
 
@@ -18,21 +19,21 @@ class MongoConnection {
     try {
       // If a cached connection exists, return it
       if (MongoConnection.cachedConnection) {
-        console.log(`Using cached database connection.`);
+        logger.info(`Using cached database connection.`);
         return MongoConnection.cachedConnection;
       }
 
-      console.log(`Connecting to MongoDB cluster...`);
+      logger.info(`Connecting to MongoDB cluster...`);
       await mongoose.connect(this.uri, { dbName: this.dbName });
 
       MongoConnection.cachedConnection = mongoose.connection; // Cache the connection
-      console.log(
+      logger.info(
         `Connected to the cluster and using database: ${this.dbName}`,
       );
 
       return MongoConnection.cachedConnection;
     } catch (error) {
-      console.error(
+      logger.error(
         'Error connecting to the database:',
         (error as Error).message,
       );
