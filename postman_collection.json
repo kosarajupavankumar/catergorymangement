@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "Category Management API",
+    "_postman_id": "12345-67890-abcdef",
+    "description": "Postman collection to test all the APIs of the Category Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Category",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": JSON.stringify({
+            "name": "New Category",
+            "parentId": "60d5ec49f8d2c2a1d4f8b0e1"
+          })
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/categories",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "categories"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Category",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": JSON.stringify({
+            "name": "Updated Category"
+          })
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/categories/60d5ec49f8d2c2a1d4f8b0e1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "categories",
+            "60d5ec49f8d2c2a1d4f8b0e1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Category",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/categories/60d5ec49f8d2c2a1d4f8b0e1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "categories",
+            "60d5ec49f8d2c2a1d4f8b0e1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Categories Tree",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/categories/tree",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "categories",
+            "tree"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
