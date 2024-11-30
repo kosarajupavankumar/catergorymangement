@@ -1,128 +1,113 @@
-import {
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  getTree,
-} from './categoryService';
+import mongoose from 'mongoose';
+import * as categoryService from '../services/categoryService';
 import CategoryModel from '../models/categoryModel';
-
-jest.mock('../models/categoryModel');
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
 describe('Category Service', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  let mongoServer: MongoMemoryServer;
+
+  beforeAll(async () => {
+    // Start in-memory MongoDB server
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri, { dbName: 'test' });
   });
 
-  describe('createCategory', () => {
-    it('should create a category successfully', async () => {
-      const categoryData = { name: 'Test Category' };
-      const savedCategory = { _id: '1', ...categoryData, save: jest.fn() };
-      (CategoryModel as any).mockImplementation(() => savedCategory);
-
-      const result = await createCategory(categoryData);
-
-      expect(result).toEqual(savedCategory);
-      expect(savedCategory.save).toHaveBeenCalled();
-    });
-
-    it('should handle error during category creation', async () => {
-      const categoryData = { name: 'Test Category' };
-      (CategoryModel as any).mockImplementation(() => {
-        throw new Error('Error creating category');
-      });
-
-      await expect(createCategory(categoryData)).rejects.toThrow(
-        'Error creating category',
-      );
-    });
+  afterAll(async () => {
+    // Disconnect from the database
+    await mongoose.disconnect();
+    await mongoServer.stop();
   });
 
-  describe('updateCategory', () => {
-    it('should update a category successfully', async () => {
-      const categoryId = '1';
-      const updateData = { name: 'Updated Category' };
-      const updatedCategory = { _id: categoryId, ...updateData };
-      (CategoryModel.findByIdAndUpdate as any).mockResolvedValue(
-        updatedCategory,
-      );
-
-      const result = await updateCategory(categoryId, updateData);
-
-      expect(result).toEqual(updatedCategory);
-      expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        categoryId,
-        updateData,
-        { new: true },
-      );
-    });
-
-    it('should handle error during category update', async () => {
-      const categoryId = '1';
-      const updateData = { name: 'Updated Category' };
-      (CategoryModel.findByIdAndUpdate as any).mockImplementation(() => {
-        throw new Error('Error updating category');
-      });
-
-      await expect(updateCategory(categoryId, updateData)).rejects.toThrow(
-        'Error updating category',
-      );
-    });
+  afterEach(async () => {
+    // Clear the database after each test
+    await CategoryModel.deleteMany();
   });
 
-  describe('deleteCategory', () => {
-    it('should delete a category successfully', async () => {
-      const categoryId = '1';
-      const category = { _id: categoryId, parentId: null, children: [] };
-      (CategoryModel.findById as any).mockResolvedValue(category);
-      (CategoryModel.deleteOne as any).mockResolvedValue({});
+  test('should create a category without a parent', async () => {
+    const data = { name: 'Electronics' };
+    const category = await categoryService.createCategory(data);
 
-      await deleteCategory(categoryId);
-
-      expect(CategoryModel.findById).toHaveBeenCalledWith(categoryId);
-      expect(CategoryModel.deleteOne).toHaveBeenCalledWith({ _id: categoryId });
-    });
-
-    it('should handle error during category deletion', async () => {
-      const categoryId = '1';
-      (CategoryModel.findById as any).mockImplementation(() => {
-        throw new Error('Error deleting category');
-      });
-
-      await expect(deleteCategory(categoryId)).rejects.toThrow(
-        'Error deleting category',
-      );
-    });
+    expect(category).toHaveProperty('_id');
+    expect(category.name).toBe(data.name);
+    expect(category.parentId).toBeNull();
   });
 
-  describe('getTree', () => {
-    it('should retrieve the category tree successfully', async () => {
-      const categories = [
-        { _id: '1', name: 'Category 1', parentId: null, children: [] },
-        { _id: '2', name: 'Category 2', parentId: '1', children: [] },
-      ];
-      (CategoryModel.find as any).mockResolvedValue(categories);
-
-      const result = await getTree();
-
-      expect(result).toEqual([
-        {
-          _id: '1',
-          name: 'Category 1',
-          parentId: null,
-          children: [
-            { _id: '2', name: 'Category 2', parentId: '1', children: [] },
-          ],
-        },
-      ]);
-      expect(CategoryModel.find).toHaveBeenCalled();
+  test('should create a subcategory with a parent', async () => {
+    const parentCategory = await categoryService.createCategory({
+      name: 'Electronics',
     });
 
-    it('should handle error during category tree retrieval', async () => {
-      (CategoryModel.find as any).mockImplementation(() => {
-        throw new Error('Error retrieving category tree');
-      });
+    const subCategoryData = { name: 'Phones', parentId: parentCategory._id };
+    const subCategory = await categoryService.createCategory(subCategoryData);
 
-      await expect(getTree()).rejects.toThrow('Error retrieving category tree');
+    const updatedParent = await CategoryModel.findById(parentCategory._id);
+
+    expect(subCategory).toHaveProperty('_id');
+    expect(subCategory.name).toBe(subCategoryData.name);
+    expect(subCategory.parentId?.toString()).toBe(
+      parentCategory._id.toString(),
+    );
+    expect(updatedParent?.children).toContainEqual(subCategory._id);
+  });
+
+  test('should update a category name', async () => {
+    const category = await categoryService.createCategory({
+      name: 'Electronics',
     });
+
+    const updatedCategory = await categoryService.updateCategory(category._id, {
+      name: 'Updated Electronics',
+    });
+
+    expect(updatedCategory).toBeTruthy();
+    expect(updatedCategory?.name).toBe('Updated Electronics');
+  });
+
+  test('should delete a category and update parent', async () => {
+    const parentCategory = await categoryService.createCategory({
+      name: 'Electronics',
+    });
+
+    const subCategory = await categoryService.createCategory({
+      name: 'Phones',
+      parentId: parentCategory._id,
+    });
+
+    await categoryService.deleteCategory(subCategory._id.toString());
+
+    const updatedParent = await CategoryModel.findById(parentCategory._id);
+    const deletedSubCategory = await CategoryModel.findById(subCategory._id);
+
+    expect(deletedSubCategory).toBeNull();
+    expect(updatedParent?.children).not.toContainEqual(subCategory._id);
+  });
+
+  test('should retrieve the category tree', async () => {
+    const electronics = await categoryService.createCategory({
+      name: 'Electronics',
+    });
+
+    // Creating subcategories without storing them in variables
+    await categoryService.createCategory({
+      name: 'Phones',
+      parentId: electronics._id,
+    });
+    const laptops = await categoryService.createCategory({
+      name: 'Laptops',
+      parentId: electronics._id,
+    });
+    await categoryService.createCategory({
+      name: 'Accessories',
+      parentId: laptops._id,
+    });
+
+    const tree = await categoryService.getTree();
+
+    expect(tree.length).toBe(1);
+    expect(tree[0].name).toBe('Electronics');
+    expect(tree[0].children.length).toBe(2);
+    expect(tree[0].children[0].name).toBe('Phones');
+    expect(tree[0].children[1].children[0].name).toBe('Accessories');
   });
 });
