@@ -27,9 +27,7 @@ describe('CategoryController', () => {
     });
 
     it('should return an error if category creation fails', async () => {
-      const response = await request(app)
-        .post('/api/categories')
-        .send({});
+      const response = await request(app).post('/api/categories').send({});
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBeDefined();
@@ -58,7 +56,9 @@ describe('CategoryController', () => {
 
   describe('DELETE /api/categories/:id', () => {
     it('should delete an existing category', async () => {
-      const response = await request(app).delete(`/api/categories/${categoryId}`);
+      const response = await request(app).delete(
+        `/api/categories/${categoryId}`,
+      );
 
       expect(response.status).toBe(204);
     });

@@ -1,5 +1,9 @@
-import mongoose from 'mongoose';
-import { createCategory, updateCategory, deleteCategory, getTree } from './categoryService';
+import {
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getTree,
+} from './categoryService';
 import CategoryModel from '../models/categoryModel';
 
 jest.mock('../models/categoryModel');
@@ -27,7 +31,9 @@ describe('Category Service', () => {
         throw new Error('Error creating category');
       });
 
-      await expect(createCategory(categoryData)).rejects.toThrow('Error creating category');
+      await expect(createCategory(categoryData)).rejects.toThrow(
+        'Error creating category',
+      );
     });
   });
 
@@ -36,12 +42,18 @@ describe('Category Service', () => {
       const categoryId = '1';
       const updateData = { name: 'Updated Category' };
       const updatedCategory = { _id: categoryId, ...updateData };
-      (CategoryModel.findByIdAndUpdate as any).mockResolvedValue(updatedCategory);
+      (CategoryModel.findByIdAndUpdate as any).mockResolvedValue(
+        updatedCategory,
+      );
 
       const result = await updateCategory(categoryId, updateData);
 
       expect(result).toEqual(updatedCategory);
-      expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(categoryId, updateData, { new: true });
+      expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        categoryId,
+        updateData,
+        { new: true },
+      );
     });
 
     it('should handle error during category update', async () => {
@@ -51,7 +63,9 @@ describe('Category Service', () => {
         throw new Error('Error updating category');
       });
 
-      await expect(updateCategory(categoryId, updateData)).rejects.toThrow('Error updating category');
+      await expect(updateCategory(categoryId, updateData)).rejects.toThrow(
+        'Error updating category',
+      );
     });
   });
 
@@ -74,7 +88,9 @@ describe('Category Service', () => {
         throw new Error('Error deleting category');
       });
 
-      await expect(deleteCategory(categoryId)).rejects.toThrow('Error deleting category');
+      await expect(deleteCategory(categoryId)).rejects.toThrow(
+        'Error deleting category',
+      );
     });
   });
 
@@ -89,7 +105,14 @@ describe('Category Service', () => {
       const result = await getTree();
 
       expect(result).toEqual([
-        { _id: '1', name: 'Category 1', parentId: null, children: [{ _id: '2', name: 'Category 2', parentId: '1', children: [] }] },
+        {
+          _id: '1',
+          name: 'Category 1',
+          parentId: null,
+          children: [
+            { _id: '2', name: 'Category 2', parentId: '1', children: [] },
+          ],
+        },
       ]);
       expect(CategoryModel.find).toHaveBeenCalled();
     });

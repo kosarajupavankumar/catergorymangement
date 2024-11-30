@@ -44,12 +44,18 @@ export async function getTree() {
     parentId: mongoose.Types.ObjectId | null = null,
   ): any =>
     categories
-      .filter((cat) => String((cat as any).parentId) === String(parentId))
+      .filter(
+        (cat) => (cat as any).parentId?.toString() === parentId?.toString(),
+      )
       .map((cat) => ({
         ...cat.toObject(),
         children: buildTree(categories, cat._id as mongoose.Types.ObjectId),
       }));
 
-  const allCategories = await CategoryModel.find();
-  return buildTree(allCategories);
+  try {
+    const allCategories = await CategoryModel.find();
+    return buildTree(allCategories);
+  } catch (error) {
+    throw new Error('Error retrieving category tree');
+  }
 }

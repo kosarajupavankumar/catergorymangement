@@ -40,6 +40,22 @@ class MongoConnection {
       process.exit(1); // Exit if database connection fails
     }
   }
+
+  // disConnect from mongoDB
+  async disconnect(): Promise<void> {
+    try {
+      if (MongoConnection.cachedConnection) {
+        await mongoose.disconnect();
+        logger.info('Disconnected from MongoDB');
+      }
+    } catch (error) {
+      logger.error(
+        'Error disconnecting from the database:',
+        (error as Error).message,
+      );
+      process.exit(1); // Exit if database disconnection fails
+    }
+  }
 }
 
 const mongoConnection = new MongoConnection(process.env.MONGO_URI!, 'landmark');
