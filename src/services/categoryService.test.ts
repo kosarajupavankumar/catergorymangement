@@ -1,128 +1,102 @@
-import {
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  getTree,
-} from './categoryService';
-import CategoryModel from '../models/categoryModel';
+import categoryModel from '../models/categoryModel';
+import { createCategory, updateCategory, deleteCategory, getTree } from './categoryService';
 
 jest.mock('../models/categoryModel');
 
 describe('Category Service', () => {
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('createCategory', () => {
-    it('should create a category successfully', async () => {
-      const categoryData = { name: 'Test Category' };
-      const savedCategory = { _id: '1', ...categoryData, save: jest.fn() };
-      (CategoryModel as any).mockImplementation(() => savedCategory);
+  it('should create a category successfully', async () => {
+    const categoryData = { name: 'Test Category' };
+    const savedCategory = { _id: '1', ...categoryData, save: jest.fn() };
+    (categoryModel as jest.Mocked<typeof categoryModel>).mockImplementation(() => savedCategory);
 
-      const result = await createCategory(categoryData);
+    const result = await createCategory(categoryData);
 
-      expect(result).toEqual(savedCategory);
-      expect(savedCategory.save).toHaveBeenCalled();
-    });
-
-    it('should handle error during category creation', async () => {
-      const categoryData = { name: 'Test Category' };
-      (CategoryModel as any).mockImplementation(() => {
-        throw new Error('Error creating category');
-      });
-
-      await expect(createCategory(categoryData)).rejects.toThrow(
-        'Error creating category',
-      );
-    });
+    expect(result).toEqual(savedCategory);
+    expect(savedCategory.save).toHaveBeenCalled();
   });
 
-  describe('updateCategory', () => {
-    it('should update a category successfully', async () => {
-      const categoryId = '1';
-      const updateData = { name: 'Updated Category' };
-      const updatedCategory = { _id: categoryId, ...updateData };
-      (CategoryModel.findByIdAndUpdate as any).mockResolvedValue(
-        updatedCategory,
-      );
-
-      const result = await updateCategory(categoryId, updateData);
-
-      expect(result).toEqual(updatedCategory);
-      expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        categoryId,
-        updateData,
-        { new: true },
-      );
+  it('should handle error during category creation', async () => {
+    const categoryData = { name: 'Test Category' };
+    (categoryModel as jest.Mocked<typeof categoryModel>).mockImplementation(() => {
+      throw new Error('Error creating category');
     });
 
-    it('should handle error during category update', async () => {
-      const categoryId = '1';
-      const updateData = { name: 'Updated Category' };
-      (CategoryModel.findByIdAndUpdate as any).mockImplementation(() => {
-        throw new Error('Error updating category');
-      });
-
-      await expect(updateCategory(categoryId, updateData)).rejects.toThrow(
-        'Error updating category',
-      );
-    });
+    await expect(createCategory(categoryData)).rejects.toThrow('Error creating category');
   });
 
-  describe('deleteCategory', () => {
-    it('should delete a category successfully', async () => {
-      const categoryId = '1';
-      const category = { _id: categoryId, parentId: null, children: [] };
-      (CategoryModel.findById as any).mockResolvedValue(category);
-      (CategoryModel.deleteOne as any).mockResolvedValue({});
+  it('should update a category successfully', async () => {
+    const categoryId = '1';
+    const updateData = { name: 'Updated Category' };
+    const updatedCategory = { _id: categoryId, ...updateData };
+    (categoryModel as jest.Mocked<typeof categoryModel>).findByIdAndUpdate.mockResolvedValue(updatedCategory);
 
-      await deleteCategory(categoryId);
+    const result = await updateCategory(categoryId, updateData);
 
-      expect(CategoryModel.findById).toHaveBeenCalledWith(categoryId);
-      expect(CategoryModel.deleteOne).toHaveBeenCalledWith({ _id: categoryId });
-    });
-
-    it('should handle error during category deletion', async () => {
-      const categoryId = '1';
-      (CategoryModel.findById as any).mockImplementation(() => {
-        throw new Error('Error deleting category');
-      });
-
-      await expect(deleteCategory(categoryId)).rejects.toThrow(
-        'Error deleting category',
-      );
-    });
+    expect(result).toEqual(updatedCategory);
+    expect(categoryModel.findByIdAndUpdate).toHaveBeenCalledWith(categoryId, updateData, { new: true });
   });
 
-  describe('getTree', () => {
-    it('should retrieve the category tree successfully', async () => {
-      const categories = [
-        { _id: '1', name: 'Category 1', parentId: null, children: [] },
-        { _id: '2', name: 'Category 2', parentId: '1', children: [] },
-      ];
-      (CategoryModel.find as any).mockResolvedValue(categories);
-
-      const result = await getTree();
-
-      expect(result).toEqual([
-        {
-          _id: '1',
-          name: 'Category 1',
-          parentId: null,
-          children: [
-            { _id: '2', name: 'Category 2', parentId: '1', children: [] },
-          ],
-        },
-      ]);
-      expect(CategoryModel.find).toHaveBeenCalled();
+  it('should handle error during category update', async () => {
+    const categoryId = '1';
+    const updateData = { name: 'Updated Category' };
+    (categoryModel as jest.Mocked<typeof categoryModel>).findByIdAndUpdate.mockImplementation(() => {
+      throw new Error('Error updating category');
     });
 
-    it('should handle error during category tree retrieval', async () => {
-      (CategoryModel.find as any).mockImplementation(() => {
-        throw new Error('Error retrieving category tree');
-      });
+    await expect(updateCategory(categoryId, updateData)).rejects.toThrow('Error updating category');
+  });
 
-      await expect(getTree()).rejects.toThrow('Error retrieving category tree');
+  it('should delete a category successfully', async () => {
+    const categoryId = '1';
+    const category = { _id: categoryId, parentId: null, children: [] };
+    (categoryModel as jest.Mocked<typeof categoryModel>).findById.mockResolvedValue(category);
+    (categoryModel as jest.Mocked<typeof categoryModel>).deleteOne.mockResolvedValue({});
+
+    await deleteCategory(categoryId);
+
+    expect(categoryModel.findById).toHaveBeenCalledWith(categoryId);
+    expect(categoryModel.deleteOne).toHaveBeenCalledWith({ _id: categoryId });
+  });
+
+  it('should handle error during category deletion', async () => {
+    const categoryId = '1';
+    (categoryModel as jest.Mocked<typeof categoryModel>).findById.mockImplementation(() => {
+      throw new Error('Error deleting category');
     });
+
+    await expect(deleteCategory(categoryId)).rejects.toThrow('Error deleting category');
+  });
+
+  it('should retrieve the category tree successfully', async () => {
+    const categories = [
+      { _id: '1', name: 'Category 1', parentId: null, children: [] },
+      { _id: '2', name: 'Category 2', parentId: '1', children: [] },
+    ];
+    (categoryModel as jest.Mocked<typeof categoryModel>).find.mockResolvedValue(categories);
+
+    const result = await getTree();
+
+    expect(result).toEqual([
+      {
+        _id: '1',
+        name: 'Category 1',
+        parentId: null,
+        children: [
+          { _id: '2', name: 'Category 2', parentId: '1', children: [] },
+        ],
+      },
+    ]);
+  });
+
+  it('should handle error during category tree retrieval', async () => {
+    (categoryModel as jest.Mocked<typeof categoryModel>).find.mockImplementation(() => {
+      throw new Error('Error retrieving category tree');
+    });
+
+    await expect(getTree()).rejects.toThrow('Error retrieving category tree');
   });
 });
