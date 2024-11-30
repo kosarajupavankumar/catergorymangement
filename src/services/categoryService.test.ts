@@ -32,7 +32,7 @@ describe('Category Service', () => {
     const categoryId = '1';
     const updateData = { name: 'Updated Category' };
     const updatedCategory = { _id: categoryId, ...updateData };
-    (categoryModel as jest.Mocked<typeof categoryModel>).findByIdAndUpdate.mockResolvedValue(updatedCategory);
+    (categoryModel as jest.Mocked<typeof categoryModel>).findByIdAndUpdate = jest.fn().mockResolvedValue(updatedCategory);
 
     const result = await updateCategory(categoryId, updateData);
 
@@ -43,7 +43,7 @@ describe('Category Service', () => {
   it('should handle error during category update', async () => {
     const categoryId = '1';
     const updateData = { name: 'Updated Category' };
-    (categoryModel as jest.Mocked<typeof categoryModel>).findByIdAndUpdate.mockImplementation(() => {
+    (categoryModel as jest.Mocked<typeof categoryModel>).findByIdAndUpdate = jest.fn().mockImplementation(() => {
       throw new Error('Error updating category');
     });
 
@@ -53,8 +53,8 @@ describe('Category Service', () => {
   it('should delete a category successfully', async () => {
     const categoryId = '1';
     const category = { _id: categoryId, parentId: null, children: [] };
-    (categoryModel as jest.Mocked<typeof categoryModel>).findById.mockResolvedValue(category);
-    (categoryModel as jest.Mocked<typeof categoryModel>).deleteOne.mockResolvedValue({});
+    (categoryModel as jest.Mocked<typeof categoryModel>).findById = jest.fn().mockResolvedValue(category);
+    (categoryModel as jest.Mocked<typeof categoryModel>).deleteOne = jest.fn().mockResolvedValue({});
 
     await deleteCategory(categoryId);
 
@@ -64,7 +64,7 @@ describe('Category Service', () => {
 
   it('should handle error during category deletion', async () => {
     const categoryId = '1';
-    (categoryModel as jest.Mocked<typeof categoryModel>).findById.mockImplementation(() => {
+    (categoryModel as jest.Mocked<typeof categoryModel>).findById = jest.fn().mockImplementation(() => {
       throw new Error('Error deleting category');
     });
 
@@ -76,7 +76,7 @@ describe('Category Service', () => {
       { _id: '1', name: 'Category 1', parentId: null, children: [] },
       { _id: '2', name: 'Category 2', parentId: '1', children: [] },
     ];
-    (categoryModel as jest.Mocked<typeof categoryModel>).find.mockResolvedValue(categories);
+    (categoryModel as jest.Mocked<typeof categoryModel>).find = jest.fn().mockResolvedValue(categories);
 
     const result = await getTree();
 
@@ -93,7 +93,7 @@ describe('Category Service', () => {
   });
 
   it('should handle error during category tree retrieval', async () => {
-    (categoryModel as jest.Mocked<typeof categoryModel>).find.mockImplementation(() => {
+    (categoryModel as jest.Mocked<typeof categoryModel>).find = jest.fn().mockImplementation(() => {
       throw new Error('Error retrieving category tree');
     });
 
