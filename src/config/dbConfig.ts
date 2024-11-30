@@ -1,0 +1,46 @@
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+class MongoConnection {
+  private uri: string;
+  private dbName: string;
+  private static cachedConnection: mongoose.Connection | null = null; // Cache the connection
+
+  constructor(uri: string, dbName = 'landmark') {
+    this.uri = uri;
+    this.dbName = dbName;
+  }
+
+  // Connect to the database
+  async connect(): Promise<mongoose.Connection> {
+    try {
+      // If a cached connection exists, return it
+      if (MongoConnection.cachedConnection) {
+        console.log(`Using cached database connection.`);
+        return MongoConnection.cachedConnection;
+      }
+
+      console.log(`Connecting to MongoDB cluster...`);
+      await mongoose.connect(this.uri, { dbName: this.dbName });
+
+      MongoConnection.cachedConnection = mongoose.connection; // Cache the connection
+      console.log(
+        `Connected to the cluster and using database: ${this.dbName}`,
+      );
+
+      return MongoConnection.cachedConnection;
+    } catch (error) {
+      console.error(
+        'Error connecting to the database:',
+        (error as Error).message,
+      );
+      process.exit(1); // Exit if database connection fails
+    }
+  }
+}
+
+const mongoConnection = new MongoConnection(process.env.MONGO_URI!, 'landmark');
+
+export default mongoConnection;
