@@ -10,6 +10,7 @@ class CategoryController {
   async createCategory(req: Request, res: Response) {
     try {
       const category = await createCategory(req.body);
+      category.save();
       res.status(201).json(category);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
