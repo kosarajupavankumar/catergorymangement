@@ -21,9 +21,14 @@ export async function createCategory(data: {
     }
   }
 
-  const savedCategory = await category.save();
-  logger.info('Category created successfully', { category: savedCategory });
-  return savedCategory;
+  try {
+    const savedCategory = await category.save();
+    logger.info('Category created successfully', { category: savedCategory });
+    return savedCategory;
+  } catch (error) {
+    logger.error('Error saving category:', (error as Error).message);
+    throw new Error('Error saving category');
+  }
 }
 
 export async function updateCategory(id: string, data: { name?: string }) {
